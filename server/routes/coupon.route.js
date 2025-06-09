@@ -17,7 +17,7 @@ router.route("/:id")
 
 // @access  User
 router.get("/:id",protectRoute, getCoupon)  // not done
-router.get("/user", protectRoute, getUserOwnedCoupon);
+router.get("/owned", protectRoute, getUserOwnedCoupon);
 router.get("/apply", protectRoute, applyCoupon);
 
 export default router;

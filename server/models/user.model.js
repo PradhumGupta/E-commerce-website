@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
-import { purchaseCoupon } from "../controllers/coupon.controller";
 
 const userSchema = new mongoose.Schema({
     name: {
