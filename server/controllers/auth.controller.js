@@ -116,7 +116,7 @@ export const refreshToken = async (req, res) => {
         const refreshToken = req.cookies.refresh_token;
 
         if(!refreshToken) {
-            return res.status(401).json({ message: "No refresh toke provided" })
+            return res.status(401).json({ message: "No refresh token provided" })
         }
 
         const decoded = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET);
@@ -126,7 +126,7 @@ export const refreshToken = async (req, res) => {
             return res.status(404).json({ message: "Invalid refresh token" })
         }
 
-        const accessToken = jwt.sign({ userId: decoded.userid }, ACCESS_TOKEN_SECRET, { expiresIn: "15m" });
+        const accessToken = jwt.sign({ userId: decoded.userId }, ACCESS_TOKEN_SECRET, { expiresIn: "15m" });
 
         res.cookie("access_token", accessToken, {
             httpOnly: true, // prevents XSS attacks, cross-site scripting

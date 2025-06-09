@@ -1,33 +1,135 @@
 import mongoose from "mongoose";
 
-const couponSchema = new mongoose.Schema({
+const couponCodeSchema = new mongoose.Schema({
     code: {
         type: String,
         required: true,
-        unique: true
+        unique: true, // Ensures no duplicate codes
     },
-    discountPercentage: {
-        type: Number,
-        required: true,
-        min: 0,
-        max: 100
+    used: {
+        type: Boolean,
+        default: false,
     },
-    expirationDate: {
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        default: null,
+    },
+    reservedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        default: null
+    },
+    reservedAt: {
         type: Date,
-        required: true,
+        default: null
+    }
+});
+
+couponCodeSchema.methods.isReserved = function() {
+    return this.reservedBy !== null && this.reservedAt !== null && !this.used
+}
+
+const purchasedBySchema = new mongoose.Schema({
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+    },
+    purchasedAt: {
+        type: Date,
+        default: null,
+    },
+});
+
+const couponSchema = new mongoose.Schema({
+    title: {
+        type: String,
+        required: [true, "Title is required"]
+    },
+    description: {
+        type: String
+    },
+    isFree: {
+        type: Boolean,
+        default: false,
+    },
+    price: {
+        type: Number,
+        min: [0, 'Purchase price cannot be negative.'],
+        required: function() {
+            return !this.isFree;
+        },
+        message: 'Purchase price is required for buyable coupons.'
+    },
+    discountType: {
+        type: String,
+        required: [true, 'Discount type is required.'],
+        enum: {
+            values: ['percentage', 'flat'],
+            message: 'Discount type must be either "percentage" or "fixed_amount".'
+        },
+    },
+    discountValue: {
+        type: Number,
+        required: [true, 'Discount value is required.'],
+        min: [0, 'Discount value cannot be negative.'],
+    },
+    minOrderAmount: {
+        type: Number,
+        default: 0,
+        min: [0, 'Minimum order amount cannot be negative.'],
+    },
+    maxDiscountAmount: {
+        type: Number,
+        min: [0, 'Maximum discount amount cannot be negative.'],
+        required: function() {
+            return this.discountType === 'percentage';
+        },
+        message: 'Max discount amount is required for percentage-based coupons.'
+    },
+    codes: [couponCodeSchema],
+    purchasedBy: [purchasedBySchema],
+    expiryDate: {
+        type: Date,
+        required: [true, "Expiry date is required"],
+    },
+    usageLimitPerUser: {
+        type: Number,
+        min: [1, 'Usage limit per user must be at least 1.'],
+        default: null, // null means no limit per user
+    },
+    usedCount: {
+        type: Number,
+        default: 0,
+        min: [0, 'Used count cannot be negative.'],
+    },
+    appliesToProducts: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Product'
+    },
+    
+    category: {
+        type: String,
+        enum: ["Food", "Electronics", "Fashion", "Travel", "Entertainment", "Other"],
+        default: null,
     },
     isActive: {
         type: Boolean,
-        default: true,
-    },
-    userId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        required: true,
-        unique: true,
-    }, 
-}, { timestamps: true, });
+        default: true
+    }
+}, {
+    timestamps: true
+});
+
+couponSchema.pre('save', function(next) {
+    if (this.discountType === 'percentage' && (this.discountValue < 0 || this.discountValue > 100)) {
+        return next(new Error('Percentage discount value must be between 0 and 100.'));
+    }
+    next();
+});
 
 const Coupon = mongoose.model("Coupon", couponSchema);
 
 export default Coupon;
+
+// later add cron job for unreserving code if purchase fails, isActive to false if coupon expires

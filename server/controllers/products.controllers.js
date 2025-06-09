@@ -39,18 +39,7 @@ const getFeaturedProducts = async (req, res) => {
     }
 }
 
-const getProduct = async(req, res) => {
-    const { id } = req.params;
-
-    try {
-        const result = await pool.query('SELECT * FROM products WHERE id = $1', [id]);
-
-        res.status(200).json(result.rows[0]);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: error });
-    }
-}
+const getProduct = async(req, res) => {}
 
 const createProduct = async (req, res) => {
     try {
@@ -59,42 +48,29 @@ const createProduct = async (req, res) => {
         let cloudinaryResponse = null
 
         if(image) {
-            await cloudinary.uploader.upload(image, { folder: "products" })
+            cloudinaryResponse = await cloudinary.uploader.upload(image, { folder: "products" });
+        }
+
+        if(!cloudinaryResponse?.secure_url) {
+            return res.status(500).json({ error: "Image upload failed" });
         }
 
         const product = await Product.create({
             name,
             description,
             price,
-            image: cloudinaryResponse?.secure_url ? cloudinaryResponse.secure_url : "",
+            image: cloudinaryResponse.secure_url,
             category
         })
 
         res.status(201).json(product);
     } catch (error) {
-        
+        console.log("Error creating product", error.message);
+        res.json({ error });
     }
 }
 
-const updateProduct = async (req, res) => {
-    const { id } = req.params;
-    const { name, price, image_url } = req.body;
-    try {
-        const result = await pool.query(
-            'UPDATE products SET name = $1, price = $2, image_url = $3 WHERE id = $4 RETURNING *',
-            [name, price, image_url, id] 
-        );
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({ message: 'Product not found' });
-        }
-
-        res.status(200).json(result.rows[0]);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server Error', error });
-    }
-}
+const updateProduct = async (req, res) => {}
 
 const deleteProduct = async (req, res) => {
     try {
@@ -125,7 +101,7 @@ const deleteProduct = async (req, res) => {
 }
 
 
-const getRecommendedProducts = async (req, res) => {
+const getRecommendedProducts = async (req, res) => { // error
     try {
         const products = await Product.aggregate([
             {

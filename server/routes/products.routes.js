@@ -4,14 +4,14 @@ import { adminRoute, protectRoute } from "../middleware/auth.middleware.js";
 
 const router = Router();
 
-router.get("/", protectRoute, adminRoute, getProducts);
+router.get("/", getProducts);
 router.get("/featured", getFeaturedProducts);
 router.get("/category/:category", getProductsByCategory);
 router.get("/recommendations", getRecommendedProducts);
 router.get("/:id", getProduct);
-router.post("/add", protectRoute, adminRoute, createProduct);
+router.post("/", protectRoute, adminRoute, createProduct);
 router.patch("/:id", protectRoute, adminRoute, toggleFeaturedProduct);
-router.put("/:id", updateProduct);
+router.put("/:id", protectRoute, adminRoute, updateProduct);
 router.delete("/:id", protectRoute, adminRoute, deleteProduct);
 
 export default router;
