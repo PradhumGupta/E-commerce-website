@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
+import { purchaseCoupon } from "../controllers/coupon.controller";
 
 const userSchema = new mongoose.Schema({
     name: {
@@ -27,6 +28,28 @@ const userSchema = new mongoose.Schema({
             product: {
                 type: mongoose.Schema.Types.ObjectId,
                 ref: "Product"
+            }
+        }
+    ],
+    ownedCoupons: [
+        {
+            coupon: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Coupon",
+                required: true
+            },
+            code: {
+                type: String,
+                unique: true,
+                required: true
+            },
+            purchasedAt: {
+                type: Date,
+                required: true
+            },
+            isFree: {
+                type: Boolean,
+                required: true
             }
         }
     ],

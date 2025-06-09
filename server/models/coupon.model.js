@@ -15,11 +15,6 @@ const couponCodeSchema = new mongoose.Schema({
         ref: "User",
         default: null,
     },
-    reservedBy: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        default: null
-    },
     reservedAt: {
         type: Date,
         default: null
