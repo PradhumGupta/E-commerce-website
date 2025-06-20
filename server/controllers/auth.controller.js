@@ -55,7 +55,7 @@ export const signup = async (req, res) => {
 
         res.status(201).json({
             _id: user._id,
-            name: user._name,
+            name: user.name,
             email: user.email,
             role: user.role
         });
@@ -143,7 +143,7 @@ export const refreshToken = async (req, res) => {
     }
 }
 
-export const getProfile = async () => {
+export const getProfile = async (req, res) => {
     try {
         res.json(req.user);
     } catch (error) {

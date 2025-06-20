@@ -235,3 +235,45 @@ const validateCouponApplicability = async (coupon, code, userId, currentOrderTot
 
     return { isValid: true, message: 'Coupon is valid' }
 }
+
+
+export const getFreeCoupon = async (req, res) => {
+    const { couponId } = req.body;
+    const user = req.user;
+
+    if (!couponId) return res.status(400).json({ message: "Coupon ID is required" });
+
+    const coupon = await Coupon.findById(couponId);
+    if (!coupon) return res.status(404).json({ message: "Coupon not found" });
+
+    if (!coupon.isFree) {
+        return res.status(400).json({ message: "This coupon is not free" });
+    }
+
+    const availableCode = coupon.codes.find(c => c.user === null);
+    
+    if (!availableCode)
+        return res.status(400).json({ message: "No available codes" });
+
+    availableCode.user = user._id;
+    availableCode.reservedAt = new Date();
+
+    await coupon.save();
+
+    user.ownedCoupons.push({
+        coupon: couponId,
+        code: availableCode.code,
+        purchasedAt: new Date(),
+        isFree: true
+    });
+
+    await user.save();
+
+    return res.json({
+        message: "Coupon purchased successfully",
+        coupon: {
+            name: coupon.name,
+            code: availableCode.code
+        }
+    })
+}

@@ -11,7 +11,8 @@ export const getCartProducts = async (req, res) => { // item is undefined for 68
             const item = cartItems.find(ci => ci.product.toString() === product._id.toString());
             return {
                 ...product.toJSON(),
-                quantity: item.quantity
+                quantity: item.quantity,
+                price: item.quantity * product.price
             };
         });
 
@@ -31,12 +32,19 @@ export const addToCart = async (req, res) => {
             return res.status(400).json({ message: "ProductId not found" })
         }
 
+        const productPrice = await Product.findById(productId).select("price");
+
+        if(!productPrice) {
+            return res.status(404).json({ message: "Product not found" });
+        }
+
         const existingItem = user.cartItems.find(item => item.product.toString() === productId);
         
         if(existingItem) {
             existingItem.quantity += 1;
+            existingItem.price = existingItem.quantity * productPrice;
         } else {
-            user.cartItems.push({ product: productId, quantity: 1 });
+            user.cartItems.push({ product: productId, quantity: 1, price });
         }
 
         await user.save();
@@ -70,7 +78,7 @@ export const removeFromCart = async (req, res) => {
 
 export const updateCartItemQuantity = async (req, res) => {
     try {
-        const { productId, quantity } = req.body;
+        const { productId, quantity, price } = req.body;
         const user = req.user;
 
         const existingItem = user.cartItems.find(item => item.product.toString() === productId);
@@ -80,6 +88,7 @@ export const updateCartItemQuantity = async (req, res) => {
                 user.cartItems = user.cartItems.filter((item) => item.product.toString() !== productId);
             } else {
                 existingItem.quantity = quantity;
+                existingItem.price = quantity * price;
             }
 
             await user.save();
