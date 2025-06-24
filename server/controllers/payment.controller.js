@@ -59,15 +59,25 @@ export const createCheckoutSession = async (req, res) => {
             metadata,
         });
 
+        let tempOrder;
         if(type === "product") {
-            const tempOrder = new Order({
+            tempOrder = new Order({
                 user: req.user._id,
-                products: req.user.cartItems,
+                type: type,
+                products: req.user.cartItems || [],
                 totalAmount: session.amount_total / 100,
                 stripeSessionId: session.id
             })
-            metadata.tempOrderId = tempOrder._id.toString();
+        } else {
+            tempOrder = new Order({
+                user: req.user._id,
+                type: type,
+                coupon: { id: metadata.couponId, code: metadata.code, price: lineItems[0].price_data.unit_amount / 100 },
+                totalAmount: session.amount_total / 100,
+                stripeSessionId: session.id
+            })
         }
+        metadata.tempOrderId = tempOrder._id.toString();
 
         res.json({ id: session.id, url: session.url });
 

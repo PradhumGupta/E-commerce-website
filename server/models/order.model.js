@@ -6,6 +6,11 @@ const orderSchema = new mongoose.Schema({
         ref: "User",
         required: true
     }, 
+    type: {
+        type: String,
+        enum: ["product", "coupon"],
+        required: true
+    },
     products: [
         {
             product: {
@@ -25,6 +30,22 @@ const orderSchema = new mongoose.Schema({
             }, 
         },
     ],
+    coupon: 
+    {
+        id: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Coupon"
+        },
+        code: {
+            type: String,
+            required: true
+        },
+        price: {
+            type: Number,
+            required: true,
+            min: 0
+        }
+    },
     totalAmount: {
         type: Number,
         required: true,

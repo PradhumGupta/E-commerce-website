@@ -98,11 +98,6 @@ const couponSchema = new mongoose.Schema({
         default: 0,
         min: [0, 'Used count cannot be negative.'],
     },
-    appliesToProducts: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Product'
-    },
-    
     category: {
         type: String,
         enum: ["Food", "Electronics", "Fashion", "Travel", "Entertainment", "Other"],
