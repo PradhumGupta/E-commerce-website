@@ -1,5 +1,6 @@
 import Coupon from "../models/coupon.model.js";
 import stripe from "../config/stripe.js";
+import cloudinary from "../config/cloudinary.js";
 
 export const getCoupon = async (req, res) => {
     const couponId = req.params.id;
@@ -20,16 +21,29 @@ export const getCoupon = async (req, res) => {
 // @access  Admin
 
 export const createCoupon = async (req, res) => {
-    const { title, description, price, isFree, totalCodes, discountType, discountValue, minOrderAmount } = req.body;
+    const { title, description, image, price, isFree, totalCodes, discountType, discountValue, minOrderAmount } = req.body;
+
+    let cloudinaryResponse = null
+
+    if (image) {
+        cloudinaryResponse = await cloudinary.uploader.upload(image, { folder: "coupons" });
+    }
+
+    if (!cloudinaryResponse?.secure_url) {
+        return res.status(500).json({ error: "Image upload failed" });
+    }
 
     try {
         const newCoupon = new Coupon({
             title,
             description,
-            isFree,
+            image: cloudinaryResponse.secure_url,
+            isFree: price === 0 || isFree,
+            price,
             discountType,
             discountValue,
-            minOrderAmount
+            minOrderAmount,
+            expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // Default to 30 days from now
         });
 
         if(newCoupon.isFree === false) {
@@ -44,7 +58,7 @@ export const createCoupon = async (req, res) => {
 
         newCoupon.codes = function(totalCodes, length = 8) {
             const codes = new Set();
-            while(codes.size() < totalCodes) {
+            while(codes.size < totalCodes) {
                 const couponCode = Math.random().toString(36).substr(2, length).toUpperCase();
                 codes.add(couponCode);
             }
@@ -52,10 +66,9 @@ export const createCoupon = async (req, res) => {
                 code,
                 user: null,
                 used: false,
-                reservedBy: null,
                 reservedAt: null
             }));
-        }()
+        }(totalCodes)
 
         await newCoupon.save();
 

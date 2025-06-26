@@ -9,7 +9,8 @@ import {
   PercentIcon, // For percent discount type
   DollarSignIcon, // For flat discount type
   PlusCircleIcon, // For add codes
-  KeyIcon, // For code input
+  KeyIcon,
+  XIcon, // For code input
 } from 'lucide-react';
 import CreateCouponForm from './CreateCouponForm';
 
@@ -60,6 +61,29 @@ const dummyCoupons = [
     createdAt: '2024-06-15 16:00',
   },
 ];
+
+
+// Framer Motion variants for modal backdrop
+const backdropVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1 },
+  exit: { opacity: 0 },
+};
+
+// Framer Motion variants for modal content
+const modalVariants = {
+  hidden: { y: "-100vh", opacity: 0 },
+  visible: {
+    y: "0",
+    opacity: 1,
+    transition: {
+      type: "spring",
+      damping: 25,
+      stiffness: 500,
+    },
+  },
+  exit: { y: "100vh", opacity: 0 },
+};
 
 function CouponsTab({ sectionVariants }) {
   const [activeFilter, setActiveFilter] = useState('all'); // 'all', 'percent', 'flat'
@@ -146,16 +170,37 @@ function CouponsTab({ sectionVariants }) {
         </button>
       </div>
 
-      {/* Create Coupon Form (conditionally rendered) */}
+
       <AnimatePresence>
         {showCreateForm && (
-          <CreateCouponForm
-            closeForm={() => setShowCreateForm(false)}
-          />
+          <motion.div
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-base-300/70 backdrop-blur-sm"
+            variants={backdropVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+          >
+            <motion.div
+              className="relative card w-full max-w-3xl bg-base-100 shadow-xl border border-base-content/10 p-6"
+              variants={modalVariants}
+            >
+              {/* Close Button */}
+              <button
+                className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+                onClick={() => setShowCreateForm(false)}
+              >
+                <XIcon className="size-5" />
+              </button>
+
+              <CreateCouponForm 
+                closeForm={() => setShowCreateForm(false)} // Pass the cancel handler 
+              />
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
 
-      <table className="table w-full table-zebra rounded-box">
+      <table className="table w-full rounded-box">
         {/* Table Head */}
         <thead>
           <tr className="bg-base-300 text-base-content">

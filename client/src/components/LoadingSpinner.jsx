@@ -12,8 +12,6 @@ function LoadingSpinner() {
       <div className="flex flex-col items-center gap-4">
         {/* DaisyUI Loading Spinner */}
         <span className="loading loading-spinner loading-lg text-primary"></span>
-        {/* Optional: Loading Text */}
-        <p className="text-base-content text-lg font-semibold">Loading...</p>
       </div>
     </motion.div>
   );

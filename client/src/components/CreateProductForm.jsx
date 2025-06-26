@@ -88,7 +88,6 @@ function CreateProductForm({ closeForm }) {
       initial="hidden"
       animate="visible"
       exit="exit"
-      className="card bg-base-100 shadow-lg border border-base-content/10 p-6 mb-8"
     >
       <h4 className="text-xl font-bold mb-4 text-base-content">Create New Product</h4>
       <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -201,10 +200,9 @@ function CreateProductForm({ closeForm }) {
             {loading ? (
               <>
                 <span className="loading loading-spinner" />
-                Logging In...
               </>
             ) : (
-              "Create Product"
+              "Create"
             )}
           </button>
         </div>

@@ -44,24 +44,24 @@ const couponSchema = new mongoose.Schema({
     description: {
         type: String
     },
+    image: {
+        type: String
+    },
     isFree: {
         type: Boolean,
-        default: false,
+        default: false
     },
     price: {
         type: Number,
         min: [0, 'Purchase price cannot be negative.'],
-        required: function() {
-            return !this.isFree;
-        },
-        message: 'Purchase price is required for buyable coupons.'
+        required: true
     },
     discountType: {
         type: String,
         required: [true, 'Discount type is required.'],
         enum: {
-            values: ['percentage', 'flat'],
-            message: 'Discount type must be either "percentage" or "fixed_amount".'
+            values: ['percent', 'flat'],
+            message: 'Discount type must be either "percentage" or "flat".'
         },
     },
     discountValue: {
