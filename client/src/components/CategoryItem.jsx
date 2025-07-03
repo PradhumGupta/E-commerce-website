@@ -17,6 +17,7 @@ function CategoryItem({ category }) {
       animate="visible"
       whileHover={{ y: -5 }} // Subtle lift animation on hover
     >
+      <Link to={category.link} className='block'>
       <figure className="h-48 overflow-hidden cursor-pointer">
           <img
             src={category.image}
@@ -28,6 +29,7 @@ function CategoryItem({ category }) {
         <h2 className="text-2xl font-bold text-primary">{category.name}</h2>
         <p className="text-base-content/80">{category.description}</p>
       </div>
+      </Link>
     </motion.div>
   );
 }

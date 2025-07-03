@@ -128,7 +128,7 @@ const getRecommendedProducts = async (req, res) => { // error
 
 
 const getProductsByCategory = async (req, res) => {
-    const { category } = req.params;
+    const category = req.params.category.replace('%20', ' ');
     try {
         const products = await Product.find({ category });
         res.json(products);

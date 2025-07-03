@@ -10,18 +10,30 @@ import { useEffect } from "react"
 import LoadingSpinner from "./components/LoadingSpinner"
 import { AnimatePresence } from 'framer-motion';
 import AdminPage from "./pages/AdminPage"
+import CategoryPage from "./pages/CategoryPage"
+import CouponPage from "./pages/CouponPage"
+import CartPage from "./pages/CartPage"
+import { useCartStore } from "./store/useCartStore"
 
 function App() {
   const { theme } = useThemeStore();
   const { user, checkAuth, checkingAuth } = useUserStore();
 
+  const { getCartItems } = useCartStore();
+
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
 
+  useEffect(() => {
+    if(user) {
+      getCartItems()
+    }
+  }, [user, getCartItems]);
+
   if(checkingAuth) 
     return <AnimatePresence>
-              <LoadingSpinner />
+              <LoadingSpinner fullscreen={true} />
             </AnimatePresence>
   
   return (
@@ -33,7 +45,9 @@ function App() {
         <Route path="/signup" element={ !user ? <SignUpPage /> : <Navigate to='/' /> } />
         <Route path="/login" element={ !user ? <LoginPage /> : <Navigate to='/' /> } />
         <Route path="/secret-dashboard" element={ user?.role === "admin" ? <AdminPage /> : <Navigate to='/login' /> } />
-        <Route path="/product/:id" element={<></>} />
+        <Route path="/coupons" element={ user ? <CouponPage /> : <Navigate to='/' /> } />
+        <Route path="/products" element={ <CategoryPage /> } />
+        <Route path="/cart" element={ user ? <CartPage /> : <Navigate to='/' /> } />
       </Routes>
       <Toaster />
     </div>

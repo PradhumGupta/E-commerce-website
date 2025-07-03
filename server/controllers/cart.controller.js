@@ -12,7 +12,7 @@ export const getCartProducts = async (req, res) => { // item is undefined for 68
             return {
                 ...product.toJSON(),
                 quantity: item.quantity,
-                price: item.quantity * product.price
+                total: item.total
             };
         });
 
@@ -32,9 +32,9 @@ export const addToCart = async (req, res) => {
             return res.status(400).json({ message: "ProductId not found" })
         }
 
-        const productPrice = await Product.findById(productId).select("price");
+        const product = await Product.findById(productId);
 
-        if(!productPrice) {
+        if(!product) {
             return res.status(404).json({ message: "Product not found" });
         }
 
@@ -42,14 +42,17 @@ export const addToCart = async (req, res) => {
         
         if(existingItem) {
             existingItem.quantity += 1;
-            existingItem.price = existingItem.quantity * productPrice;
+            existingItem.total = existingItem.quantity * product.price;
         } else {
-            user.cartItems.push({ product: productId, quantity: 1, price });
+            user.cartItems.push({ product: productId, quantity: 1, total: product.price });
         }
 
         await user.save();
-        res.json(user.cartItems);
 
+        const cartItem = existingItem || user.cartItems[user.cartItems.length - 1];
+        const addedItem = { ...product.toJSON(), quantity: cartItem.quantity, total: cartItem.total };
+
+        res.json(addedItem);
     } catch (error) {
         console.log("Error in addToCart controller", error.message);
         res.status(500).json({ message: 'Server Error', error });
@@ -88,7 +91,7 @@ export const updateCartItemQuantity = async (req, res) => {
                 user.cartItems = user.cartItems.filter((item) => item.product.toString() !== productId);
             } else {
                 existingItem.quantity = quantity;
-                existingItem.price = quantity * price;
+                existingItem.total = quantity * price;
             }
 
             await user.save();

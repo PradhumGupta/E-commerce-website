@@ -21,7 +21,7 @@ export const getCoupon = async (req, res) => {
 // @access  Admin
 
 export const createCoupon = async (req, res) => {
-    const { title, description, image, price, isFree, totalCodes, discountType, discountValue, minOrderAmount } = req.body;
+    const { title, description, image, price, totalCodes, discountType, discountValue, minOrderAmount, category } = req.body;
 
     let cloudinaryResponse = null
 
@@ -38,29 +38,30 @@ export const createCoupon = async (req, res) => {
             title,
             description,
             image: cloudinaryResponse.secure_url,
-            isFree: price === 0 || isFree,
+            isFree: +price === 0,
             price,
             discountType,
             discountValue,
             minOrderAmount,
+            category,
             expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // Default to 30 days from now
         });
 
-        if(newCoupon.isFree === false) {
-            newCoupon.price = price;
-        } else {
+        if(newCoupon.isFree) {
             newCoupon.usageLimitPerUser = 1
         }
 
-        if(newCoupon.discountType === 'percentage') {
+        if(newCoupon.discountType === 'percent') {
             this.maxDiscountAmount = minOrderAmount * discountValue/100;
         }
 
-        newCoupon.codes = function(totalCodes, length = 8) {
+        const generateCodes = async function(totalCodes, length = 8) {
             const codes = new Set();
             while(codes.size < totalCodes) {
                 const couponCode = Math.random().toString(36).substr(2, length).toUpperCase();
-                codes.add(couponCode);
+                const existingCoupon = await Coupon.findOne({ "codes.code": couponCode });
+
+                if(!existingCoupon) codes.add(couponCode);
             }
             return Array.from(codes).map((code) => ({
                 code,
@@ -68,7 +69,9 @@ export const createCoupon = async (req, res) => {
                 used: false,
                 reservedAt: null
             }));
-        }(totalCodes)
+        };
+
+        newCoupon.codes = await generateCodes(totalCodes)
 
         await newCoupon.save();
 
@@ -86,7 +89,7 @@ export const createCoupon = async (req, res) => {
 
 export const getAllCoupons = async (req, res) => {
     try {
-        const coupons = await Coupon.find().sort({ createdAt: -1 });
+        const coupons = await Coupon.find().select("-codes -purchasedBy").sort({ createdAt: -1 });
         res.status(200).json(coupons);
     } catch (err) {
         console.error("Error getting coupons:", err);
@@ -157,14 +160,20 @@ export const deleteCoupon = async (req, res) => {
 // @access  User
 
 export const getUserOwnedCoupon = async (req, res) => {
-    const userId = req.user._id;
+    const user = req.user;
+    console.log(user._id)
     try {
-        const coupons = await Coupon.find({ "purchasedBy.user": userId }).populate("codes").exec();
+        const coupons = await Coupon.find().select("-codes -purchasedBy");
+        const userCoupons = coupons.map((coupon) => {
+            const ownedCoupon = user.ownedCoupons.find(c => c.coupon.toString() === coupon._id.toString());
+            if(!ownedCoupon) return null;
+            return { ...coupon.toJSON(), code: ownedCoupon.code };
+        }).filter(Boolean);
 
-        return res.status(200).json({ success: true, data: ownedCoupons });
+        return res.status(200).json(userCoupons);
     } catch (err) {
         console.error("Error fetching user's coupons:", err);
-        return res.status(500).json({ success: false, message: "Server error" });
+        return res.status(500).json({ message: "Server error" });
     }
 };
 
@@ -188,7 +197,7 @@ export const applyCoupon = async (req, res) => {
             return res.status(404).json({ message: "Coupon not found" });
         }
 
-        const { isValid, message } = await validateCouponApplicability(coupon, code, userId, currentOrderTotal);
+        const { isValid, message } = await validateCouponApplicability(coupon, couponCode, userId, currentOrderTotal);
             
         if(!isValid) {
             return res.status(400).json({ message });
@@ -209,7 +218,7 @@ export const applyCoupon = async (req, res) => {
 
         res.status(200).json({
             message: "Coupon applied successfully!",
-            couponCode: code,
+            couponCode: couponCode,
             discountAmount: parseFloat(discountAmount.toFixed(2)),
             newOrderTotal: parseFloat((currentOrderTotal - discountAmount).toFixed(2))
         })
@@ -250,18 +259,21 @@ const validateCouponApplicability = async (coupon, code, userId, currentOrderTot
 }
 
 
-export const getFreeCoupon = async (req, res) => {
+export const claimFreeCoupon = async (req, res) => {
+    try {
+        
     const { couponId } = req.body;
     const user = req.user;
 
-    if (!couponId) return res.status(400).json({ message: "Coupon ID is required" });
-
     const coupon = await Coupon.findById(couponId);
-    if (!coupon) return res.status(404).json({ message: "Coupon not found" });
 
     if (!coupon.isFree) {
         return res.status(400).json({ message: "This coupon is not free" });
     }
+
+    const isExist = await user.ownedCoupons.find(c => c.coupon.toString() === couponId) ? true : false;
+
+    if(isExist) return res.status(400).json({ message: "This coupon is already claimed" });
 
     const availableCode = coupon.codes.find(c => c.user === null);
     
@@ -282,11 +294,15 @@ export const getFreeCoupon = async (req, res) => {
 
     await user.save();
 
+    const claimedCoupon = coupon.$clone().toJSON({ transform: (doc, ret) => { delete ret.codes; delete ret.purchasedBy; return ret; } });
+
+    claimedCoupon.code = availableCode.code;
+
     return res.json({
         message: "Coupon purchased successfully",
-        coupon: {
-            name: coupon.name,
-            code: availableCode.code
-        }
+        coupon: claimedCoupon
     })
+ } catch (error) {
+        
+    }
 }

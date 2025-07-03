@@ -61,7 +61,7 @@ const couponSchema = new mongoose.Schema({
         required: [true, 'Discount type is required.'],
         enum: {
             values: ['percent', 'flat'],
-            message: 'Discount type must be either "percentage" or "flat".'
+            message: 'Discount type must be either "percent" or "flat".'
         },
     },
     discountValue: {

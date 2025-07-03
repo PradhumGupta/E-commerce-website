@@ -23,7 +23,7 @@ function HomePage() {
       name: "Home Goods",
       image: '../assets/images/homegoods.webp',
       description: "Everything you need to make your house a home.",
-      link: "/products?category=homegoods"
+      link: "/products?category=home-goods"
     },
     {
       id: 4,
@@ -58,7 +58,7 @@ function HomePage() {
           Explore Our Categories
         </h1>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 ml-6 mr-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mx-8">
           {categories.map(category => (
             <CategoryItem key={category.id} category={category} />
           ))}

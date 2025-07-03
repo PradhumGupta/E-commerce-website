@@ -9,11 +9,15 @@ import {
 } from "lucide-react";
 import ThemeSelector from "./ThemeSelector";
 import { useUserStore } from "../store/useUserStore";
+import { useCartStore } from "../store/useCartStore";
+import { useEffect } from "react";
 
 function NavBar() {
   const { pathname } = useResolvedPath();
   const { user, logout } = useUserStore();
   const isAdmin = user?.role === "admin";
+
+  const {cart} = useCartStore();
 
   return (
     <div className="bg-base-100/80 backdrop-blur-lg border-b border-base-content/10 sticky top-0 z-50">
@@ -39,10 +43,7 @@ function NavBar() {
             {/* Theme Selector */}
             <ThemeSelector />
 
-            {/* Home Button */}
-            <Link to="/" className="btn btn-ghost rounded-full px-4 text-base-content/70 hover:text-base-content hover:bg-base-200 transition-colors duration-200">
-              Home
-            </Link>
+            
 
             {/* Dashboard Button (Admin Only) */}
             {isAdmin && (
@@ -54,15 +55,19 @@ function NavBar() {
 
             {/* Conditional Rendering for Cart, Login/Signup, and Logout */}
             {user ? (
-              // User is logged in
               <>
-                {/* Cart Icon (only if user is true) */}
+                {/* Home Button */}
+            <Link to="/coupons" className="btn btn-ghost rounded-full px-4 text-base-content/70 hover:text-base-content hover:bg-base-200 transition-colors duration-200">
+              Coupons
+            </Link>
+
                 <div className="indicator">
                   <Link to="/cart" className="p-2 rounded-full hover:bg-base-200 transition-colors duration-200">
                     <ShoppingBagIcon className="size-5 text-accent" /> {/* Using accent for cart icon color */}
-                    <span className="badge badge-sm badge-primary indicator-item">
-                      8 {/* This should ideally come from your cart state */}
-                    </span>
+                    {cart.length > 0 && (
+                      <span className="badge badge-sm badge-primary indicator-item">
+                      {cart.length} {/* This should ideally come from your cart state */}
+                      </span>)}
                   </Link>
                 </div>
 

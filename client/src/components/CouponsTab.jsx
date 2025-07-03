@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   MoreVerticalIcon,
@@ -13,57 +13,8 @@ import {
   XIcon, // For code input
 } from 'lucide-react';
 import CreateCouponForm from './CreateCouponForm';
+import { useCouponStore } from '../store/useCouponStore';
 
-// Dummy Data for Coupons
-const dummyCoupons = [
-  {
-    id: 'CUP001',
-    title: 'Summer Sale 20%',
-    discountType: 'percent', // Can be 'percent' or 'flat'
-    discountValue: 20, // 20%
-    price: 0.00, // Coupons can be free or sold
-    category: 'Seasonal',
-    totalCodes: 100,
-    purchasedCodes: 55,
-    createdAt: '2024-05-01 09:00',
-  },
-  {
-    id: 'CUP002',
-    title: 'Flat $10 Off',
-    discountType: 'flat',
-    discountValue: 10, // $10
-    price: 0.00,
-    category: 'Electronics',
-    totalCodes: 50,
-    purchasedCodes: 20,
-    createdAt: '2024-05-10 14:00',
-  },
-  {
-    id: 'CUP003',
-    title: 'Holiday Special 15%',
-    discountType: 'percent',
-    discountValue: 15,
-    price: 5.00,
-    category: 'Apparel',
-    totalCodes: 200,
-    purchasedCodes: 180,
-    createdAt: '2024-06-01 11:30',
-  },
-  {
-    id: 'CUP004',
-    title: 'Weekend Mega Savings',
-    discountType: 'flat',
-    discountValue: 25,
-    price: 0.00,
-    category: 'All Products',
-    totalCodes: 75,
-    purchasedCodes: 10,
-    createdAt: '2024-06-15 16:00',
-  },
-];
-
-
-// Framer Motion variants for modal backdrop
 const backdropVariants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1 },
@@ -86,11 +37,17 @@ const modalVariants = {
 };
 
 function CouponsTab({ sectionVariants }) {
-  const [activeFilter, setActiveFilter] = useState('all'); // 'all', 'percent', 'flat'
+  const [activeFilter, setActiveFilter] = useState('all');
   const [codesToAdd, setCodesToAdd] = useState({}); // State to hold input for 'add codes' for each coupon
   const [showCreateForm, setShowCreateForm] = useState(false); 
-  // Filter coupons based on the active filter
-  const filteredCoupons = dummyCoupons.filter(coupon => {
+
+  const {allCoupons, loading, getAllCoupons} = useCouponStore();
+
+  useEffect(() => {
+    getAllCoupons()
+  }, [getAllCoupons])
+  
+  const filteredCoupons = allCoupons.filter(coupon => {
     if (activeFilter === 'all') {
       return true;
     }
@@ -170,7 +127,6 @@ function CouponsTab({ sectionVariants }) {
         </button>
       </div>
 
-
       <AnimatePresence>
         {showCreateForm && (
           <motion.div
@@ -220,8 +176,8 @@ function CouponsTab({ sectionVariants }) {
         <tbody>
           {filteredCoupons.length > 0 ? (
             filteredCoupons.map(coupon => (
-              <tr key={coupon.id} className="text-base-content/90">
-                <td>{coupon.id}</td>
+              <tr key={coupon._id} className="text-base-content/90">
+                <td><a href={`/${coupon._id}`}>CUP00{allCoupons.indexOf(coupon)+1}</a></td>
                 <td>{coupon.title}</td>
                 <td>
                   <div className="flex items-center gap-2">
@@ -231,8 +187,8 @@ function CouponsTab({ sectionVariants }) {
                 </td>
                 <td>${coupon.price.toFixed(2)}</td>
                 <td>{coupon.category}</td>
-                <td>{coupon.totalCodes}</td>
-                <td>{coupon.purchasedCodes}</td>
+                <td>{coupon.codes.length}</td>
+                <td>{coupon.purchasedBy.length}</td>
                 <td>
                   {/* Add Codes Input & Button */}
                   <div className="flex flex-col gap-1 items-start"> {/* Use flex-col and items-start */}
@@ -240,20 +196,20 @@ function CouponsTab({ sectionVariants }) {
                       type="number"
                       placeholder="Qty"
                       className="input input-bordered input-xs w-20"
-                      value={codesToAdd[coupon.id] || ''}
-                      onChange={(e) => handleAddCodesInputChange(coupon.id, e.target.value)}
+                      value={codesToAdd[coupon._id] || ''}
+                      onChange={(e) => handleAddCodesInputChange(coupon._id, e.target.value)}
                       min="1"
                     />
                     <button
                       className="btn btn-primary btn-xs flex items-center gap-1 mt-1"
-                      onClick={() => handleGenerateCodes(coupon.id, codesToAdd[coupon.id] || 0)}
-                      disabled={!codesToAdd[coupon.id] || codesToAdd[coupon.id] <= 0}
+                      onClick={() => handleGenerateCodes(coupon.id, codesToAdd[coupon._id] || 0)}
+                      disabled={!codesToAdd[coupon._id] || codesToAdd[coupon._id] <= 0}
                     >
                       <PlusCircleIcon className="size-3" /> Generate
                     </button>
                   </div>
                 </td>
-                <td>{coupon.createdAt}</td>
+                <td>{new Date(coupon.createdAt).toLocaleDateString()}</td>
                 <td className="text-center">
                   {/* Action Menu (Dropdown) */}
                   <div className="dropdown dropdown-end">
@@ -262,17 +218,17 @@ function CouponsTab({ sectionVariants }) {
                     </div>
                     <ul tabIndex={0} className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-32 border border-base-content/10">
                       <li>
-                        <a onClick={() => handleView(coupon.id)} className="flex items-center gap-2 text-base-content/80 hover:text-primary">
+                        <a onClick={() => handleView(coupon._id)} className="flex items-center gap-2 text-base-content/80 hover:text-primary">
                           <EyeIcon className="size-4" /> View
                         </a>
                       </li>
                       <li>
-                        <a onClick={() => handleEdit(coupon.id)} className="flex items-center gap-2 text-base-content/80 hover:text-warning">
+                        <a onClick={() => handleEdit(coupon._id)} className="flex items-center gap-2 text-base-content/80 hover:text-warning">
                           <EditIcon className="size-4" /> Edit
                         </a>
                       </li>
                       <li>
-                        <a onClick={() => handleDelete(coupon.id)} className="flex items-center gap-2 text-base-content/80 hover:text-error">
+                        <a onClick={() => handleDelete(coupon._id)} className="flex items-center gap-2 text-base-content/80 hover:text-error">
                           <Trash2Icon className="size-4" /> Delete
                         </a>
                       </li>
