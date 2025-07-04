@@ -5,12 +5,15 @@ import toast from "react-hot-toast";
 export const useCartStore = create((set, get) => ({
     cart: [],
     coupon: [],
+    orderSummary: {},
+    isCouponApplied: false,
 
     getCartItems: async () => {
         try {
             const res = await axios.get('/cart');
             console.log(res);
             set({ cart: res.data });
+            get().calculateOrderSummary(get().cart);
         } catch (error) {
             console.log("error", error)
             set({ cart: [] });
@@ -64,16 +67,32 @@ export const useCartStore = create((set, get) => ({
             toast.error(error.response.data.error);
         }
     }, 
-    applyCouponCode: async (couponCode, currentOrderTotal) => {
+    applyCoupon: async (couponCode, currentOrderTotal) => {
         try {
             const res = await axios.post('/coupons/apply', { couponCode, currentOrderTotal });
-            console.log(res);
             toast.success(res.data.message);
-            return res.data.discountAmount;
+
+            set((prevState) => {
+                const obj = prevState.orderSummary;
+                obj.discount = res.data.discountAmount;
+                obj.total -= obj.discount;
+                return { orderSummary: obj, coupon: res.data.appliedCoupon, isCouponApplied: true };
+            })
 
         } catch (error) {
             console.log("Error on applying coupon", error)
-            toast.error(error.response.data.error);
+            toast.error(error.response.data.error || error.response.data.message);
         }
+    },
+    calculateOrderSummary: (items) => {
+        const subtotal = items.reduce((sum, item) => sum + item.total, 0);
+        const shipping = subtotal > 100 ? 0 : 7.99; // Free shipping over $100
+        const taxRate = 0.08; // 8% tax
+        const tax = subtotal * taxRate;
+        const total = subtotal + shipping + tax;
+
+        set(() => ({
+            orderSummary: { subtotal, shipping, tax, total }
+        }));
     }
 }))
