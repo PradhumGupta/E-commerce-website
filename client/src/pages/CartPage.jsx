@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   ShoppingCartIcon, // Main cart icon
@@ -49,34 +49,17 @@ const summaryVariants = {
 };
 
 function CartPage() {
-  const { cart, removeItem, updateItem, applyCouponCode } = useCartStore();
+  const { cart, orderSummary, removeItem, updateItem, applyCoupon } = useCartStore();
   const [couponCode, setCouponCode] = useState("");
   const [couponApplied, setCouponApplied] = useState(false);
-
-  // Helper to calculate dummy order summary
-  const calculateOrderSummary = (items) => {
-    const subtotal = items.reduce((sum, item) => sum + item.total, 0);
-    const shipping = subtotal > 100 ? 0 : 7.99; // Free shipping over $100
-    const taxRate = 0.08; // 8% tax
-    const tax = subtotal * taxRate;
-    const total = subtotal + shipping + tax;
-
-    return { subtotal, shipping, tax, total };
-  };
-
-  const orderSummary = calculateOrderSummary(cart);
 
   const handleApplyCoupon = async (e) => {
     e.preventDefault();
 
     try {
-      const discount = await applyCouponCode(couponCode, orderSummary.total);
-      if (!discount) return;
-
+      await applyCoupon(couponCode, orderSummary.total);
       setCouponApplied(true);
 
-      orderSummary.discount = discount;
-      orderSummary.total -= discount;
     } catch (error) {
       console.log("error occurred", error);
     }
@@ -205,11 +188,11 @@ function CartPage() {
                       ${orderSummary.tax.toFixed(2)}
                     </span>
                   </li>
-                  {couponApplied && (
+                  {couponApplied && orderSummary.discount && (
                     <li className="flex justify-between items-center text-success">
                       <span>Coupon Discount:</span>
                       <span className="font-semibold">
-                        -{orderSummary.discount}
+                        - ${orderSummary.discount}
                       </span>
                     </li>
                   )}
@@ -251,13 +234,12 @@ function CartPage() {
                   >
                     Apply
                   </button>
-                  {couponApplied && (
+                  {couponApplied && orderSummary.discount && (
                     <p className="text-success text-sm flex items-center gap-1">
-                      <CheckCircle2 className="size-4" /> Coupon applied
-                      successfully!
+                      <CheckCircle2 className="size-4" /> Coupon applied successfully!
                     </p>
                   )}
-                  {!couponApplied && couponCode && (
+                  {couponApplied && couponCode && !orderSummary.discount && (
                     <p className="text-error text-sm flex items-center gap-1">
                       <XIcon className="size-4" /> Invalid coupon code.
                     </p>
