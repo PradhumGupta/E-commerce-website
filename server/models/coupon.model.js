@@ -100,7 +100,7 @@ const couponSchema = new mongoose.Schema({
     },
     category: {
         type: String,
-        enum: ["Food", "Electronics", "Fashion", "Travel", "Entertainment", "Other"],
+        enum: ["Electronics", "Apparel", "Home Goods", "Books", "Sports & Outdoors", "Beauty & Personal Care"],
         default: null,
     },
     isActive: {
