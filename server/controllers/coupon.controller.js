@@ -1,4 +1,5 @@
 import Coupon from "../models/coupon.model.js";
+import Product from "../models/product.model.js";
 import stripe from "../config/stripe.js";
 import cloudinary from "../config/cloudinary.js";
 
@@ -197,7 +198,7 @@ export const applyCoupon = async (req, res) => {
             return res.status(404).json({ message: "Coupon not found" });
         }
 
-        const { isValid, message } = await validateCouponApplicability(coupon, couponCode, userId, currentOrderTotal);
+        const { isValid, message } = await validateCouponApplicability(coupon, couponCode, req.user, currentOrderTotal);
             
         if(!isValid) {
             return res.status(400).json({ message });
@@ -216,9 +217,11 @@ export const applyCoupon = async (req, res) => {
             }
         }
 
+        const { codes, purchasedBy, ...couponData } = coupon.toJSON();
+
         res.status(200).json({
             message: "Coupon applied successfully!",
-            couponCode: couponCode,
+            appliedCoupon: {...couponData, code: couponCode},
             discountAmount: parseFloat(discountAmount.toFixed(2)),
             newOrderTotal: parseFloat((currentOrderTotal - discountAmount).toFixed(2))
         })
@@ -230,30 +233,35 @@ export const applyCoupon = async (req, res) => {
 }
 
 
-const validateCouponApplicability = async (coupon, code, userId, currentOrderTotal) => {
-
+const validateCouponApplicability = async (coupon, code, user, currentOrderTotal) => {
     const now = Date.now();
 
-    try {
-        if (!coupon.isActive || coupon.expiryDate < now) {
-            coupon.isActive = false;
-            await coupon.save();
-            return { isValid: false, message: `Coupon is inactive or expired.` }
-        }
-    } catch (error) {
-        throw error;
+    if (!coupon.isActive || coupon.expiryDate < now) {
+        return { isValid: false, message: `Coupon is inactive or expired.` };
     }
-    
-    if (await coupon.codes.find(c => c.code === code && c.user !== userId || c.used)) {
-        return { isValid: false, message: "Invalid or used coupon code" }
+
+    const couponCodeDoc = await coupon.codes.find((c) => c.code === code);
+
+    if (!couponCodeDoc || couponCodeDoc.user.toString() !== user._id.toString() || couponCodeDoc.used) {
+        return { isValid: false, message: "Invalid or used coupon code" };
     }
 
     if (coupon.minOrderAmount > currentOrderTotal) {
         return { isValid: false, message: `Minimum order amount of ${coupon.minOrderAmount} not met` }
     }
 
-    // Add logic for appliesToProducts/Categories if needed
-    // This would typically involve comparing cart items with these lists.
+    const products = await Product.find({ _id: { $in: user.cartItems.map((item) => item.product) } });
+
+    const subTotal = user.cartItems
+        .filter((item) => {
+            const product = products.find((p) => p._id.toString() === item.product.toString());
+            return product && product.category === coupon.category
+        })
+        .reduce((acc, item) => acc + item.total, 0);
+
+    if (subTotal < coupon.minOrderAmount) {
+        return { isValid: false, message: `Minimum order amount of $${coupon.minOrderAmount} not met by ${coupon.category} products` }
+    }
 
     return { isValid: true, message: 'Coupon is valid' }
 }
@@ -303,6 +311,7 @@ export const claimFreeCoupon = async (req, res) => {
         coupon: claimedCoupon
     })
  } catch (error) {
-        
+        console.log("Error in claimCoupon controller", error)
+        res.status(500).json({ message: "Internal Server error at claim coupon", error: error.message})
     }
 }
