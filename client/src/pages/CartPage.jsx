@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useCartStore } from "../store/useCartStore";
 
+
 // Framer Motion variants
 const pageVariants = {
   hidden: { opacity: 0, y: 50 },
@@ -49,7 +50,7 @@ const summaryVariants = {
 };
 
 function CartPage() {
-  const { cart, orderSummary, removeItem, updateItem, applyCoupon } = useCartStore();
+  const { cart, orderSummary, removeItem, updateItem, applyCoupon, coupon, isCouponApplied, stripePayment } = useCartStore();
   const [couponCode, setCouponCode] = useState("");
   const [couponApplied, setCouponApplied] = useState(false);
 
@@ -248,7 +249,9 @@ function CartPage() {
               </div>
 
               {/* Checkout Button */}
-              <button className="btn btn-primary btn-lg w-full mt-4 shadow-xl hover:shadow-2xl transition-all duration-200">
+              <button className="btn btn-primary btn-lg w-full mt-4 shadow-xl hover:shadow-2xl transition-all duration-200"
+              onClick={() => stripePayment("product", cart, coupon)}
+              >
                 Proceed to Checkout
               </button>
             </motion.div>
