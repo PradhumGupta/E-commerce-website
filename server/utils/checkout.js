@@ -3,21 +3,33 @@ import Order from "../models/order.model.js";
 import Product from "../models/product.model.js";
 import User from "../models/user.model.js";
 
-export const createProductLineItems = async (items, discountAmount, user) => {
-    const products = await Product.find({ _id: { $in: items } });
-    return products.map(p => {
-        const item = user.cartItems.find(item => item.product.toString() === p._id.toString());
-        const discountedAmount = discountAmount ? discountAmount / products.length : 0;
-        const amount = (p.price - discountedAmount) * 100;
+export const createProductLineItems = (items, coupon) => {
+    return items.map(item => {
+        const discountedAmount = coupon && item.category === coupon.category  ? coupon.discountAmount / item.quantity : 0;
+        const amount = (item.price - discountedAmount) * 100;
+
         return {
             price_data: {
-                currency: "inr",
-                product_data: { name: p.name },
+                currency: "usd",
+                product_data: { name: item.name, images: [item.image] },
                 unit_amount: amount > 0 ? Math.round(amount) : 0
             },
-            quantity: item ? item.quantity : 1,
+            quantity: item.quantity,
         }
-    });
+    })
+    // return products.map(p => {
+    //     const item = user.cartItems.find(item => item.product.toString() === p._id.toString());
+    //     const discountedAmount = discountAmount ? discountAmount / products.length : 0;
+    //     const amount = (p.price - discountedAmount) * 100;
+    //     return {
+    //         price_data: {
+    //             currency: "usd",
+    //             product_data: { name: p.name },
+    //             unit_amount: amount > 0 ? Math.round(amount) : 0
+    //         },
+    //         quantity: item ? item.quantity : 1,
+    //     }
+    // });
 }
 
 export const handleSuccessfulCheckout = async (session) => {

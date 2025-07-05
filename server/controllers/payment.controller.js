@@ -7,22 +7,21 @@ import User from "../models/user.model.js";
 import { createProductLineItems } from "../utils/checkout.js";
 
 export const createCheckoutSession = async (req, res) => {
-    const { type, items } = req.body;
-    const discountAmount = req.body.appliedCoupon?.discountAmount
+    const { type, items, appliedCoupon } = req.body;
 
     try {
         let lineItems = [];
         let metadata = { userid: req.user._id.toString(), type };
 
         if (type === "product") {
-            lineItems = await createProductLineItems(items, discountAmount, req.user)
-            metadata.itemIds = items.join(",");
-            metadata.appliedCouponCode = req.body.appliedCoupon?.code;
+            lineItems = createProductLineItems(items, appliedCoupon)
+            console.log(lineItems)
+            metadata.itemIds = items.map(item => item._id.toString()).join(",");
+            metadata.appliedCouponCode = appliedCoupon?.code;
         }
 
         if (type === "coupon") {
             const couponId = items[0];
-            const user = req.user;
 
             if (!couponId) return res.status(400).json({ message: "Coupon ID is required" });
 
