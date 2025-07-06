@@ -19,7 +19,10 @@ connectDB();
 
 app.use(express.json()); // allows you to parse the body of the request
 app.use(cookieParser())
-app.use(cors());
+app.use(cors({
+    origin: ['http://localhost:3000', 'https://e-commerce-website-sigma-cyan.vercel.app'],
+    credentials: true
+}));
 app.use(helmet()); // helmet is a security middleware that helps you protect your app by setting various HTTP Headers
 app.use(morgan("dev")); // log the requests
 
