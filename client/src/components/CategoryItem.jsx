@@ -22,7 +22,8 @@ function CategoryItem({ category }) {
           <img
             src={category.image}
             alt={category.name}
-            className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
+            className="w-full h-full object-cover transition-transform duration-300 hover:scale-110 rounded-t-xl"
+            loading='lazy'
           />
       </figure>
       <div className="p-4">
