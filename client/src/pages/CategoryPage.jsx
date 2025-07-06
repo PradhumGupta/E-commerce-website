@@ -104,19 +104,19 @@ function CategoryPage() {
     >
       {/* Sidebar Navigation */}
       <motion.div
-        className="lg:w-64 lg:border-r lg:border-b-0 p-6 flex flex-col gap-2 lg:min-h-[calc(100vh-8rem)] lg:sticky lg:top-20 mb-6 lg:mb-0"
+        className="lg:w-64 lg:border-b-0 p-6 flex flex-col gap-2 lg:min-h-[calc(100vh-8rem)] lg:sticky lg:top-20 mb-6 lg:mb-0"
         variants={sectionVariants} // Apply entrance animation to sidebar
         initial="hidden"
         animate="visible"
       >
-        <h2 className="text-2xl font-bold mb-4 mx-2 text-base-content">
+        <h2 className="text-2xl font-bold mb-4 text-base-content">
           Explore
         </h2>
-        <ul className="p-0 flex flex-row lg:flex-col overflow-x-auto lg:overflow-x-hidden gap-4 justify-between">
+        <ul className="flex flex-row lg:flex-col rounded-box max-lg:overflow-x-auto overflow-hidden gap-2">
           {allCategories.map((cat) => (
-            <li key={cat.param} className="flex flex-col items-center flex-shrink-0">
+            <li key={cat.param} className="flex flex-col max-lg:items-center flex-shrink-0">
               <a
-                className={`flex max-lg:flex-col items-center gap-3 text-base-content ${
+                className={`p-2 flex max-lg:flex-col items-center gap-3 text-base-content rounded-selector ${
                   activeCategory === cat.param
                     ? "active !text-primary !bg-primary/20"
                     : "hover:bg-base-200"
