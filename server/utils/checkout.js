@@ -17,19 +17,6 @@ export const createProductLineItems = (items, coupon) => {
             quantity: item.quantity,
         }
     })
-    // return products.map(p => {
-    //     const item = user.cartItems.find(item => item.product.toString() === p._id.toString());
-    //     const discountedAmount = discountAmount ? discountAmount / products.length : 0;
-    //     const amount = (p.price - discountedAmount) * 100;
-    //     return {
-    //         price_data: {
-    //             currency: "usd",
-    //             product_data: { name: p.name },
-    //             unit_amount: amount > 0 ? Math.round(amount) : 0
-    //         },
-    //         quantity: item ? item.quantity : 1,
-    //     }
-    // });
 }
 
 export const handleSuccessfulCheckout = async (session) => {

@@ -5,7 +5,7 @@ import { loadStripe } from "@stripe/stripe-js"
 
 export const useCartStore = create((set, get) => ({
     cart: [],
-    coupon: [],
+    coupon: {},
     orderSummary: {},
     isCouponApplied: false,
 
@@ -20,6 +20,10 @@ export const useCartStore = create((set, get) => ({
             set({ cart: [] });
             toast.error(error.response.data.error || "An Error Occurred");
         }
+    },
+
+    clearCart: () => {
+        set({cart: {}, coupon: {}, orderSummary: {}, isCouponApplied: false})
     },
 
     addToCart: async (productId) => {

@@ -14,6 +14,7 @@ import CategoryPage from "./pages/CategoryPage"
 import CouponPage from "./pages/CouponPage"
 import CartPage from "./pages/CartPage"
 import { useCartStore } from "./store/useCartStore"
+import PurchaseSuccessPage from "./pages/PurchaseSuccessPage"
 
 function App() {
   const { theme } = useThemeStore();
@@ -48,6 +49,7 @@ function App() {
         <Route path="/coupons" element={ user ? <CouponPage /> : <Navigate to='/' /> } />
         <Route path="/products" element={ <CategoryPage /> } />
         <Route path="/cart" element={ user ? <CartPage /> : <Navigate to='/' /> } />
+        <Route path="/purchase-success" element={ user ? <PurchaseSuccessPage /> : <Navigate to='/' /> } />
       </Routes>
       <Toaster />
     </div>
