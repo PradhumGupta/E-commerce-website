@@ -5,7 +5,7 @@ import { handleSuccessfulCheckout } from "../utils/checkout.js";
 
 const router = express.Router();
 
-router.post("/my-webhook", express.raw({ type: 'application/json' }), async (req, res) => {
+router.post("/", express.raw({ type: 'application/json' }), async (req, res) => {
     const sig = req.headers['stripe-signature'];
     let event;
 
