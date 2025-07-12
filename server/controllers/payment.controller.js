@@ -11,7 +11,7 @@ export const createCheckoutSession = async (req, res) => {
 
     try {
         let lineItems = [];
-        let metadata = { userid: req.user._id.toString(), type };
+        let metadata = { userId: req.user._id.toString(), type };
 
         if (type === "product") {
             lineItems = createProductLineItems(items, appliedCoupon)
@@ -37,8 +37,8 @@ export const createCheckoutSession = async (req, res) => {
             lineItems = [
                 {
                     price_data: {
-                        currency: "inr",
-                        product_data: { name: coupon.name },
+                        currency: "usd",
+                        product_data: { name: coupon.title, images: [coupon.image] },
                         unit_amount: coupon.price * 100,
                     },
                     quantity: 1,
@@ -96,7 +96,9 @@ export const checkoutSuccess = async (req, res) => {
 
             const order = await Order.find({ sessionId: session.id })
 
-            res.status(200).json({ success: true, message: "Payment successful", orderId: order._id });
+            res.status(200).json({ success: true, message: "Payment successful", orderId: order._id, orderType: order.type });
+        } else {
+            res.json({ success: false, message: "Payment Pending" });
         }
 
     } catch (error) {
