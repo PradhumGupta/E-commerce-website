@@ -1,20 +1,20 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState } from "react";
+import { motion } from "framer-motion";
 import {
   PercentIcon,
   DollarSignIcon,
   ClipboardCheckIcon, // For copied state
-  ClipboardIcon,      // For copy button
-  GiftIcon,           // Generic coupon icon
-  CheckCircle2,       // For claimed status
-  ShoppingCartIcon,   // For buyable coupon
-} from 'lucide-react';
-import { useCouponStore } from '../store/useCouponStore';
+  ClipboardIcon, // For copy button
+  GiftIcon, // Generic coupon icon
+  CheckCircle2, // For claimed status
+  ShoppingCartIcon, // For buyable coupon
+} from "lucide-react";
+import { useCouponStore } from "../store/useCouponStore";
 
 function CouponCard({ coupon }) {
   const [isCopied, setIsCopied] = useState(false);
 
-  const { claimCoupon } = useCouponStore();
+  const { claimCoupon, buyCoupon } = useCouponStore();
 
   const handleCopyCode = async () => {
     // In a real application, coupon codes would be generated or retrieved
@@ -26,7 +26,7 @@ function CouponCard({ coupon }) {
       setTimeout(() => setIsCopied(false), 2000); // Reset icon after 2 seconds
       console.log(`Copied coupon code: ${codeToCopy}`);
     } catch (err) {
-      console.error('Failed to copy text: ', err);
+      console.error("Failed to copy text: ", err);
       // Fallback for older browsers or if navigator.clipboard is not available
       const textArea = document.createElement("textarea");
       textArea.value = codeToCopy;
@@ -34,32 +34,42 @@ function CouponCard({ coupon }) {
       textArea.focus();
       textArea.select();
       try {
-        document.execCommand('copy');
+        document.execCommand("copy");
         setIsCopied(true);
         setTimeout(() => setIsCopied(false), 2000);
         console.log(`Copied coupon code (fallback): ${codeToCopy}`);
       } catch (err) {
-        console.error('Fallback: Oops, unable to copy', err);
+        console.error("Fallback: Oops, unable to copy", err);
       }
       document.body.removeChild(textArea);
     }
   };
 
   const handleAcquireCoupon = async (id) => {
-    await claimCoupon(id)
-    if (coupon.price === 0) {
-      console.log(`Coupon "${coupon.title}" claimed for free!`);
-    } else {
-      console.log(`Coupon "${coupon.title}" bought for $${coupon.price.toFixed(2)}!`);
-      // You'd typically redirect to a checkout or payment gateway here
+    try {
+      if (coupon.price === 0) {
+        await claimCoupon(id);
+        console.log(`Coupon "${coupon.title}" claimed for free!`);
+      } else {
+        await buyCoupon("coupon", id);
+        console.log(`Coupon "${coupon.title}" bought for $${coupon.price.toFixed(2)}!`);
+        // You'd typically redirect to a checkout or payment gateway here
+      }
+    } catch (error) {
+      console.log("Error acquiring coupon:", error);
     }
+
     // After a successful API call, you might show a success message
     // or refresh the user's list of acquired coupons.
   };
 
   const cardVariants = {
     hidden: { opacity: 0, y: 50 },
-    visible: { opacity: 1, y: 0, transition: { type: "spring", damping: 15, stiffness: 100 } }
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { type: "spring", damping: 15, stiffness: 100 },
+    },
   };
 
   return (
@@ -77,7 +87,11 @@ function CouponCard({ coupon }) {
             src={coupon.image}
             alt={coupon.title}
             className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
-            onError={(e) => { e.target.onerror = null; e.target.src="https://placehold.co/160x90/CCCCCC/000000?text=Coupon"; }} // Fallback image
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src =
+                "https://placehold.co/160x90/CCCCCC/000000?text=Coupon";
+            }} // Fallback image
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-base-content/50 text-xl font-bold">
@@ -91,28 +105,35 @@ function CouponCard({ coupon }) {
           <span>{coupon.title}</span>
           {/* Display price badge only if coupon is NOT free (price > 0) */}
           {coupon.price > 0 && (
-            <span className="badge badge-lg badge-secondary">${coupon.price.toFixed(2)}</span>
+            <span className="badge badge-lg badge-secondary">
+              ${coupon.price.toFixed(2)}
+            </span>
           )}
         </h2>
         <p className="text-base-content/80 mb-2">{coupon.description}</p>
 
         <div className="flex items-center gap-2 text-base-content/70 text-lg font-semibold mb-4">
-          {coupon.discountType === 'percent' ? (
+          {coupon.discountType === "percent" ? (
             <>
-              <PercentIcon className="size-5 text-accent" /> {coupon.discountValue}% OFF
+              <PercentIcon className="size-5 text-accent" />{" "}
+              {coupon.discountValue}% OFF
               {coupon.maxDiscountAmount && coupon.maxDiscountAmount > 0 && (
-                <span className="text-sm font-normal text-base-content/50 ml-1">(Max ${coupon.maxDiscountAmount.toFixed(2)})</span>
+                <span className="text-sm font-normal text-base-content/50 ml-1">
+                  (Max ${coupon.maxDiscountAmount.toFixed(2)})
+                </span>
               )}
             </>
           ) : (
             <>
-              <DollarSignIcon className="size-5 text-accent" /> ${coupon.discountValue.toFixed(2)} OFF
+              <DollarSignIcon className="size-5 text-accent" /> $
+              {coupon.discountValue.toFixed(2)} OFF
             </>
           )}
         </div>
 
-        <div className="card-actions justify-end mt-auto"> {/* mt-auto pushes actions to bottom */}
-          
+        <div className="card-actions justify-end mt-auto">
+          {" "}
+          {/* mt-auto pushes actions to bottom */}
           {!coupon.code ? (
             <button
               className="btn btn-outline btn-primary btn-sm flex items-center gap-2 transition-colors duration-200 hover:bg-primary hover:text-primary-content"
@@ -130,7 +151,10 @@ function CouponCard({ coupon }) {
             </button>
           ) : (
             <>
-              <button className="btn btn-success btn-sm flex items-center gap-2" disabled>
+              <button
+                className="btn btn-success btn-sm flex items-center gap-2"
+                disabled
+              >
                 <CheckCircle2 className="size-4" /> Claimed!
               </button>
               {/* Show Copy Code button ONLY if coupon is acquired */}
@@ -138,8 +162,12 @@ function CouponCard({ coupon }) {
                 className="btn btn-secondary btn-sm flex items-center gap-2 transition-colors duration-200 hover:bg-secondary-focus hover:text-secondary-content"
                 onClick={handleCopyCode}
               >
-                {isCopied ? <ClipboardCheckIcon className="size-4" /> : <ClipboardIcon className="size-4" />}
-                {isCopied ? 'Copied!' : 'Copy Code'}
+                {isCopied ? (
+                  <ClipboardCheckIcon className="size-4" />
+                ) : (
+                  <ClipboardIcon className="size-4" />
+                )}
+                {isCopied ? "Copied!" : "Copy Code"}
               </button>
             </>
           )}
