@@ -3,7 +3,7 @@ import { configDotenv } from "dotenv";
 configDotenv();
 
 export const { 
-    PORT, 
+    PORT, NODE_ENV,
     MONGO_URI,
     REDIS_PASSWORD, REDIS_HOST,
     ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET,

@@ -1,7 +1,9 @@
-import { ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET } from "../config/env.js";
+import { ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET, NODE_ENV } from "../config/env.js";
 import redisClient from "../config/redis.js";
 import User from "../models/user.model.js";
 import jwt from "jsonwebtoken";
+
+const isProd = NODE_ENV === "production";
 
 const generateTokens = (userId) => {
     const accessToken = jwt.sign({ userId }, ACCESS_TOKEN_SECRET, { expiresIn: '15m', })
@@ -20,15 +22,15 @@ const storeRefreshToken = async (userId, refreshToken) => {
 const setCookies = (res, accessToken, refreshToken) => {
     res.cookie("access_token", accessToken, {
         httpOnly: true, // prevents XSS attacks, cross-site scripting
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict", // Helps prevent CSRF attacks
+        secure: isProd,
+        sameSite: isProd ? "None" : "Lax",
         maxAge: 15 * 60 * 1000 // 15 minutes
     });
 
     res.cookie("refresh_token", refreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict", // Helps prevent CSRF attacks, cross-site request forgery
+        secure: isProd,
+        sameSite: isProd ? "None" : "Lax",
         maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     });
 }
@@ -130,8 +132,8 @@ export const refreshToken = async (req, res) => {
 
         res.cookie("access_token", accessToken, {
             httpOnly: true, // prevents XSS attacks, cross-site scripting
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "strict", // Helps prevent CSRF attacks
+            secure: isProd,
+            sameSite: isProd ? "None" : "Lax",
             maxAge: 15 * 60 * 1000 // 15 minutes
         });
 
