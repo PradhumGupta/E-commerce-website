@@ -17,6 +17,8 @@ const app = express();
 
 connectDB();
 
+app.use("/api/webhook", webhookRoute); // to avoid parsing body by express.json()
+
 app.use(express.json()); // allows you to parse the body of the request
 app.use(cookieParser())
 app.use(cors({
@@ -32,7 +34,6 @@ app.use("/api/cart", cartRouter);
 app.use("/api/coupons", couponRouter);
 app.use("/api/payments", paymentRouter);
 app.use("/api/analytics", analyticsRouter);
-app.use("/api/webhook", webhookRoute);
 
 app.get("/", (req, res) => {
     res.send("hello from the test route");
