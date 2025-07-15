@@ -76,6 +76,7 @@ export const createCheckoutSession = async (req, res) => {
                 stripeSessionId: session.id
             })
         }
+        await tempOrder.save();
         metadata.tempOrderId = tempOrder._id.toString();
 
         res.json({ id: session.id, url: session.url });
@@ -96,7 +97,7 @@ export const checkoutSuccess = async (req, res) => {
 
             const order = await Order.find({ sessionId: session.id })
 
-            res.status(200).json({ success: true, message: "Payment successful", orderId: order._id, orderType: order.type });
+            res.status(200).json({ success: true, message: "Payment successful", order: order.toJSON() });
         } else {
             res.json({ success: false, message: "Payment Pending" });
         }

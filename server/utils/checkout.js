@@ -21,7 +21,13 @@ export const createProductLineItems = (items, coupon) => {
 
 export const handleSuccessfulCheckout = async (session) => {
     try {
-        const userId = session.metadata.userid;
+        const userId = session.metadata.userId;
+
+        const order = await Order.findById(session.metadata.tempOrderId);
+            if (!order) {
+                console.error("Order not found for session:", session.id);
+                return;
+            }
 
         if (session.metadata.type === "coupon") {
             const coupon = await Coupon.findById(session.metadata.couponId);
@@ -43,13 +49,6 @@ export const handleSuccessfulCheckout = async (session) => {
         }
 
         if (session.metadata.type === "product") {
-            const order = await Order.findById(session.metadata.tempOrderId);
-            if (!order) {
-                console.error("Order not found for session:", session.id);
-                return;
-            }
-            await order.save();
-            
             const user = await User.findById(userId);
             user.cartItems = [];
             await user.save();
@@ -58,12 +57,15 @@ export const handleSuccessfulCheckout = async (session) => {
             
             if(session.metadata.appliedCouponCode) {
                 await Coupon.findOneAndUpdate({
-                    code: session.metadata.appliedCouponCode, userId: session.metadata.userId
+                    "codes.code": session.metadata.appliedCouponCode, "codes.userId": session.metadata.userId
                 }, {
-                    isActive: false
+                    "codes.used": true,
+                    usedCount: this.usedCount + 1
                 })
             }
         }
+        order.status = "completed";
+        await order.save();
     } catch (err) {
         console.log("Error in handleSuccessfulCheckout:", err.message);
     }

@@ -55,6 +55,11 @@ const orderSchema = new mongoose.Schema({
         type: String,
         unique: true,
     },
+    status: {
+        type: String,
+        enum: ["pending", "completed", "failed"],
+        default: "pending"
+    }
 }, { timestamps: true });
 
 const Order = mongoose.model("Order", orderSchema);

@@ -6,6 +6,8 @@ import {
   ShoppingBagIcon,
   HomeIcon,
   ReceiptTextIcon,
+  DollarSignIcon,
+  CalendarIcon,
 } from "lucide-react";
 import axios from "../lib/axios";
 import toast from "react-hot-toast";
@@ -58,8 +60,8 @@ function PurchaseSuccessPage() {
         });
         if (res.data.success === true) {
           console.log(res);
-          setOrderDetails(res.data.orderId);
-          if (res.data.orderType === "product") clearCart();
+          setOrderDetails(res.data.order);
+          if (res.data.order.type === "product") clearCart();
           setIsProcessing(false);
         }
       } catch (error) {
@@ -101,24 +103,54 @@ function PurchaseSuccessPage() {
         className="card w-full max-w-md bg-base-100 shadow-xl border border-base-content/10 p-8 text-center"
         variants={cardVariants}
       >
-        {!isProcessing ? (
+        {!isProcessing && orderDetails ? (
           <div className="card-body p-0">
-            <CheckCircleIcon className="size-20 text-success mx-auto mb-6" />
-            <h2
-              className="card-title text-3xl font-bold mb-4 text-center mx-auto
+            {orderDetails.status === "completed" ? (
+              <>
+                <CheckCircleIcon className="size-20 text-success mx-auto mb-6" />
+                <h2
+                  className="card-title text-3xl font-bold mb-4 text-center mx-auto
             bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary"
-            >
-              Purchase Successful!
-            </h2>
-            <p className="text-base-content/80 text-lg mb-6">
-              Thank you for your order.
-            </p>
+                >
+                  Purchase Successful!
+                </h2>
+                <p className="text-base-content/80 text-lg mb-6">
+                  Thank you for your order.
+                </p>
+              </>
+            ) : (
+              <h2 className="card-title text-3xl font-bold mb-4 text-center mx-auto">
+                Order Details
+              </h2>
+            )}
 
             <div className="text-left space-y-3 text-base-content/90 mb-8">
               <div className="flex items-center gap-3">
                 <ReceiptTextIcon className="size-5 text-primary" />
                 <span className="font-semibold">Order ID:</span>
-                <span>{orderDetails}</span>
+                <span>{orderDetails._id}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <CalendarIcon className="size-5 text-primary" />
+                <span className="font-semibold">Order Date:</span>
+                <span>{orderDetails.updatedAt}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <DollarSignIcon className="size-5 text-primary" />
+                <span className="font-semibold">Total Amount:</span>
+                <span className="text-accent font-bold">
+                  ${orderDetails.totalAmount}
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <ShoppingBagIcon className="size-5 text-primary" />
+                <span className="font-semibold">{orderDetails.type === "product" ? " Products" : "Coupon"} Purchased:</span>
+                <span>{orderDetails.products.length > 0 ? orderDetails.products.length : 1}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <CheckCircleIcon className="size-5 text-primary" />
+                <span className="font-semibold">Payment Status:</span>
+                <span className="text-success">{orderDetails.status.toUpperCase()}</span>
               </div>
 
               <div className="flex flex-col gap-3">
