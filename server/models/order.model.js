@@ -15,17 +15,14 @@ const orderSchema = new mongoose.Schema({
         {
             product: {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: "Product",
-                required: true
+                ref: "Product"
             }, 
             quantity: {
                 type: Number,
-                required: true,
                 min: 1
             },
             price: {
                 type: Number,
-                required: true,
                 min: 0
             }, 
         },
@@ -37,14 +34,12 @@ const orderSchema = new mongoose.Schema({
             ref: "Coupon"
         },
         code: {
-            type: String,
-            required: true
+            type: String
         },
         price: {
             type: Number,
-            required: true,
             min: 0
-        }
+        },
     },
     totalAmount: {
         type: Number,

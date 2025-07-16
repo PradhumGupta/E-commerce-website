@@ -13,11 +13,22 @@ export const createCheckoutSession = async (req, res) => {
         let lineItems = [];
         let metadata = { userId: req.user._id.toString(), type };
 
+        const tempOrder = new Order({
+            user: req.user._id,
+            type: type
+        });
+
         if (type === "product") {
             lineItems = createProductLineItems(items, appliedCoupon)
             console.log(lineItems)
             metadata.itemIds = items.map(item => item._id.toString()).join(",");
             metadata.appliedCouponCode = appliedCoupon?.code;
+
+            tempOrder.products = items.map(item => ({
+                product: item._id,
+                quantity: item.quantity,
+                price: item.price
+            }));
         }
 
         if (type === "coupon") {
@@ -46,6 +57,8 @@ export const createCheckoutSession = async (req, res) => {
             ];
             metadata.couponId = coupon._id.toString();
             metadata.code = availableCode.code;
+
+            tempOrder.coupon = { id: couponId, code: availableCode.code, price: coupon.price }
         }
         
         const session = await stripe.checkout.sessions.create({
@@ -58,31 +71,15 @@ export const createCheckoutSession = async (req, res) => {
             metadata,
         });
 
-        let tempOrder;
-        if(type === "product") {
-            tempOrder = new Order({
-                user: req.user._id,
-                type: type,
-                products: req.user.cartItems || [],
-                totalAmount: session.amount_total / 100,
-                stripeSessionId: session.id
-            })
-        } else {
-            tempOrder = new Order({
-                user: req.user._id,
-                type: type,
-                coupon: { id: metadata.couponId, code: metadata.code, price: lineItems[0].price_data.unit_amount / 100 },
-                totalAmount: session.amount_total / 100,
-                stripeSessionId: session.id
-            })
-        }
+        tempOrder.totalAmount = session.amount_total / 100;
+        tempOrder.stripeSessionId = session.id;
         await tempOrder.save();
         metadata.tempOrderId = tempOrder._id.toString();
 
         res.json({ id: session.id, url: session.url });
 
     } catch (err) {
-        console.error("Purchase error:", err.message);
+        console.error("Purchase error:", err);
         res.status(500).json({ message: "Server error" });
     }
 };
