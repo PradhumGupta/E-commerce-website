@@ -92,15 +92,15 @@ export const checkoutSuccess = async (req, res) => {
 
         if(session.payment_status === "paid") {
 
-            const order = await Order.find({ sessionId: session.id })
+            const order = await Order.find({ sessionId: session.id }).lean();
 
-            res.status(200).json({ success: true, message: "Payment successful", order: order.toJSON() });
+            res.status(200).json({ success: true, message: "Payment successful", order });
         } else {
             res.json({ success: false, message: "Payment Pending" });
         }
 
     } catch (error) {
-        console.log("Error processing successful checkout", error.message);
-        res.status(500).json({ message: 'Error processing successful checkout', error });
+        console.log("Error processing successful checkout", error);
+        res.status(500).json({ message: 'Error processing successful checkout', error: error.message });
     }
 }
