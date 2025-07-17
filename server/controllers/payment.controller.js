@@ -18,6 +18,8 @@ export const createCheckoutSession = async (req, res) => {
             type: type
         });
 
+        // metadata.tempOrderId = tempOrder._id.toString();
+
         if (type === "product") {
             lineItems = createProductLineItems(items, appliedCoupon)
             console.log(lineItems)
@@ -74,7 +76,6 @@ export const createCheckoutSession = async (req, res) => {
         tempOrder.totalAmount = session.amount_total / 100;
         tempOrder.stripeSessionId = session.id;
         await tempOrder.save();
-        metadata.tempOrderId = tempOrder._id.toString();
 
         res.json({ id: session.id, url: session.url });
 
@@ -92,7 +93,7 @@ export const checkoutSuccess = async (req, res) => {
 
         if(session.payment_status === "paid") {
 
-            const order = await Order.find({ sessionId: session.id }).lean();
+            const order = await Order.find({ stripeSessionId: session.id }).lean();
 
             res.status(200).json({ success: true, message: "Payment successful", order });
         } else {

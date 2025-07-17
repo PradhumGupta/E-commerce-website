@@ -144,8 +144,8 @@ function PurchaseSuccessPage() {
               </div>
               <div className="flex items-center gap-3">
                 <ShoppingBagIcon className="size-5 text-primary" />
-                <span className="font-semibold">{orderDetails.type === "product" ? " Products" : "Coupon"} Purchased:</span>
-                <span>{orderDetails.products.length > 0 ? orderDetails.products.length : 1}</span>
+                <span className="font-semibold">{orderDetails.type === "product" ? "Products" : "Coupon"} Purchased:</span>
+                <span>{orderDetails.products ? orderDetails.products.length : 1}</span>
               </div>
               <div className="flex items-center gap-3">
                 <CheckCircleIcon className="size-5 text-primary" />
