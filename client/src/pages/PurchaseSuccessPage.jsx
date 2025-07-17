@@ -150,7 +150,7 @@ function PurchaseSuccessPage() {
               <div className="flex items-center gap-3">
                 <CheckCircleIcon className="size-5 text-primary" />
                 <span className="font-semibold">Payment Status:</span>
-                <span className="text-success">{orderDetails.status.toUpperCase()}</span>
+                <span className="text-success">{orderDetails.status}</span>
               </div>
 
               <div className="flex flex-col gap-3">
