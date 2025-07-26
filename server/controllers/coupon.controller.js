@@ -90,7 +90,12 @@ export const createCoupon = async (req, res) => {
 
 export const getAllCoupons = async (req, res) => {
     try {
-        const coupons = await Coupon.find().select("-codes -purchasedBy").sort({ createdAt: -1 });
+        const coupons = await Coupon.find().sort({ createdAt: -1 }).lean();
+        
+        coupons.forEach((coupon) => {
+            coupon.codes = coupon.codes.length;
+            coupon.purchasedBy = coupon.purchasedBy.length;
+        })
         res.status(200).json(coupons);
     } catch (err) {
         console.error("Error getting coupons:", err);

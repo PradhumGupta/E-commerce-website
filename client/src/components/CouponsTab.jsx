@@ -186,9 +186,9 @@ function CouponsTab({ sectionVariants }) {
                   </div>
                 </td>
                 <td>${coupon.price.toFixed(2)}</td>
-                <td>{coupon.category}</td>
-                <td>{coupon.codes.length}</td>
-                <td>{coupon.purchasedBy.length}</td>
+                <td>{coupon.category || "ALL"}</td>
+                <td>{coupon.codes}</td>
+                <td>{coupon.purchasedBy}</td>
                 <td>
                   {/* Add Codes Input & Button */}
                   <div className="flex flex-col gap-1 items-start"> {/* Use flex-col and items-start */}
@@ -216,7 +216,7 @@ function CouponsTab({ sectionVariants }) {
                     <div tabIndex={0} role="button" className="btn btn-ghost btn-xs">
                       <MoreVerticalIcon className="size-4" />
                     </div>
-                    <ul tabIndex={0} className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-32 border border-base-content/10">
+                    <ul tabIndex={0} className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-32 border border-base-content/10 overflow-auto">
                       <li>
                         <a onClick={() => handleView(coupon._id)} className="flex items-center gap-2 text-base-content/80 hover:text-primary">
                           <EyeIcon className="size-4" /> View
